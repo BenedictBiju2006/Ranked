@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native build output
+android/.gradle/
+android/app/build/
+android/build/
+ios/build/
+*.apk
+*.aab
+*.ipa
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing / coverage
+coverage/
+
+# Metro
+.metro-health-check*
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# IDEs / Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Local database / Supabase
+supabase/.temp/
+
+# EAS / Expo credentials
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# Firebase / service credentials
+google-services.json
+GoogleService-Info.plist
+
+# Local secrets / credentials
+credentials.json
+service-account*.json

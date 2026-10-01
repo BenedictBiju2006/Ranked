@@ -44,4 +44,5 @@ export interface AddRankingItemInput {
   name: string;
   description?: string;
   imageUrl?: string;
+  score?: number;
 }

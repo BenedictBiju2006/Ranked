@@ -39,6 +39,10 @@ export function addRankingItem(
 ): Ranking {
   const now = new Date().toISOString();
 
+  if (input.score !== undefined) {
+    validateScore(ranking.scoringMode, input.score);
+  }
+
   const item: RankingItem = {
     id: generateId(),
     rankingId: ranking.id,
@@ -47,7 +51,7 @@ export function addRankingItem(
     description: input.description?.trim() || null,
     imageUrl: input.imageUrl ?? null,
 
-    score: null,
+    score: input.score ?? null,
     position: ranking.items.length,
 
     createdAt: now,
@@ -177,4 +181,34 @@ function validateScore(
       }
       break;
   }
+}
+
+export function getOrderedRankingItems(ranking: Ranking): RankingItem[] {
+  if (ranking.scoringMode === "binary") {
+    return [...ranking.items].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    );
+  }
+
+  return [...ranking.items].sort((a, b) => {
+    if (a.score === null && b.score === null) {
+      return a.position - b.position;
+    }
+
+    if (a.score === null) {
+      return 1;
+    }
+
+    if (b.score === null) {
+      return -1;
+    }
+
+    if (a.score !== b.score) {
+      return b.score - a.score;
+    }
+
+    return a.position - b.position;
+  });
 }

@@ -6,12 +6,19 @@ export const rankingKeys = {
   all: ["rankings"] as const,
 
   detail: (id: string) =>
-    ["rankings", id] as const,
+    ["rankings", "detail", id] as const,
 };
 
 export function useRankings() {
   return useQuery({
     queryKey: rankingKeys.all,
     queryFn: () => rankingService.getAll(),
+  });
+}
+
+export function useRanking(id: string) {
+  return useQuery({
+    queryKey: rankingKeys.detail(id),
+    queryFn: () => rankingService.getById(id),
   });
 }

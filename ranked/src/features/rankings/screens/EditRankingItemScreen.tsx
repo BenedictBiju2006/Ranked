@@ -9,29 +9,34 @@ import {
   RankingItemForm,
   RankingItemFormValues,
 } from "../components/RankingItemForm";
-import { useAddRankingItem } from "../hooks/useAddRankingItem";
 import { useRanking } from "../hooks/useRankings";
+import { useUpdateRankingItem } from "../hooks/useUpdateRankingItem";
 
-type AddRankingItemScreenProps = {
+type EditRankingItemScreenProps = {
   rankingId: string;
+  itemId: string;
 };
 
-export function AddRankingItemScreen({
+export function EditRankingItemScreen({
   rankingId,
-}: AddRankingItemScreenProps) {
+  itemId,
+}: EditRankingItemScreenProps) {
   const {
     data: ranking,
     isPending,
     isError,
   } = useRanking(rankingId);
 
-  const addRankingItem =
-    useAddRankingItem(rankingId);
+  const updateRankingItem =
+    useUpdateRankingItem(
+      rankingId,
+      itemId
+    );
 
   if (isPending) {
     return (
       <View style={styles.stateContainer}>
-        <Text>Loading ranking...</Text>
+        <Text>Loading item...</Text>
       </View>
     );
   }
@@ -44,10 +49,22 @@ export function AddRankingItemScreen({
     );
   }
 
+  const item = ranking.items.find(
+    (item) => item.id === itemId
+  );
+
+  if (!item) {
+    return (
+      <View style={styles.stateContainer}>
+        <Text>Item not found.</Text>
+      </View>
+    );
+  }
+
   async function handleSubmit(
     values: RankingItemFormValues
   ) {
-    await addRankingItem.mutateAsync(
+    await updateRankingItem.mutateAsync(
       values
     );
 
@@ -57,9 +74,14 @@ export function AddRankingItemScreen({
   return (
     <RankingItemForm
       scoringMode={ranking.scoringMode}
-      submitLabel="Add Item"
+      initialName={item.name}
+      initialDescription={
+        item.description ?? ""
+      }
+      initialScore={item.score}
+      submitLabel="Save Changes"
       isPending={
-        addRankingItem.isPending
+        updateRankingItem.isPending
       }
       onSubmit={handleSubmit}
     />

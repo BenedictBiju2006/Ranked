@@ -6,6 +6,8 @@ import {
   Text,
   View,
 } from "react-native";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+
 
 import { RatingControl } from "../components/RatingControl";
 import { getOrderedRankingItems } from "../domain/ranking.rules";
@@ -14,6 +16,7 @@ import {
   RankingScoringMode,
 } from "../domain/ranking.types";
 import { useRanking } from "../hooks/useRankings";
+import { useRemoveRankingItem } from "../hooks/useRemoveRankingItem";
 
 type RankingDetailScreenProps = {
   rankingId: string;
@@ -27,6 +30,8 @@ export function RankingDetailScreen({
     isPending,
     isError,
   } = useRanking(rankingId);
+
+  const removeRankingItem = useRemoveRankingItem(rankingId);
 
   if (isPending) {
     return (
@@ -103,52 +108,87 @@ export function RankingDetailScreen({
           </View>
         }
         renderItem={({ item, index }) => (
-          <RankingItemRow
-            item={item}
-            index={index}
-            scoringMode={ranking.scoringMode}
-          />
-        )}
+        <RankingItemRow
+          item={item}
+          index={index}
+          rankingId={rankingId}
+          scoringMode={ranking.scoringMode}
+          onDelete={() => removeRankingItem.mutate(item.id)}
+        />
+)}
       />
-    </View>
+    </View> 
   );
 }
 
 type RankingItemRowProps = {
   item: RankingItem;
   index: number;
+  rankingId: string;
   scoringMode: RankingScoringMode;
+  onDelete: () => void;
 };
 
 function RankingItemRow({
   item,
   index,
+  rankingId,
   scoringMode,
+  onDelete,
 }: RankingItemRowProps) {
+  function handleEdit() {
+    router.push({
+      pathname: "/ranking/edit-item",
+      params: {
+        rankingId,
+        itemId: item.id,
+      },
+    });
+  }
+
   return (
-    <View style={styles.item}>
-      {scoringMode !== "binary" && (
-        <Text style={styles.position}>
-          {index + 1}
-        </Text>
-      )}
-
-      <View style={styles.itemContent}>
-        <View style={styles.itemHeader}>
-          <Text style={styles.itemName}>
-            {item.name}
+    <Swipeable
+      friction={2}
+      rightThreshold={70}
+      overshootRight={false}
+      renderRightActions={() => (
+        <View style={styles.deleteAction}>
+          <Text style={styles.deleteActionText}>
+            Delete
           </Text>
-
-          {renderScore(item.score, scoringMode)}
         </View>
-
-        {item.description && (
-          <Text style={styles.itemDescription}>
-            {item.description}
+      )}
+      onSwipeableOpen={onDelete}
+      containerStyle={styles.swipeable}
+    >
+      <Pressable
+        style={styles.item}
+        onLongPress={handleEdit}
+        delayLongPress={450}
+      >
+        {scoringMode !== "binary" && (
+          <Text style={styles.position}>
+            {index + 1}
           </Text>
         )}
-      </View>
-    </View>
+
+        <View style={styles.itemContent}>
+          <View style={styles.itemHeader}>
+            <Text style={styles.itemName}>
+              {item.name}
+            </Text>
+
+            {renderScore(item.score, scoringMode)}
+          </View>
+
+          {item.description && (
+            <Text style={styles.itemDescription}>
+              {item.description}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    </Swipeable>
   );
 }
 
@@ -307,4 +347,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.5,
   },
+  swipeable: {
+  borderRadius: 14,
+  overflow: "hidden",
+},
+
+deleteAction: {
+  width: 100,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#D92D20",
+},
+
+deleteActionText: {
+  color: "white",
+  fontSize: 15,
+  fontWeight: "600",
+},
 });

@@ -46,3 +46,9 @@ export interface AddRankingItemInput {
   imageUrl?: string;
   score?: number;
 }
+
+export interface UpdateRankingItemInput {
+  name: string;
+  description?: string;
+  score: number;
+}

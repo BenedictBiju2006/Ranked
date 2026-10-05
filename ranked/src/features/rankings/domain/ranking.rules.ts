@@ -4,6 +4,7 @@ import {
   Ranking,
   RankingItem,
   RankingScoringMode,
+  UpdateRankingItemInput
 } from "./ranking.types";
 
 function generateId(): string {
@@ -61,6 +62,42 @@ export function addRankingItem(
   return {
     ...ranking,
     items: [...ranking.items, item],
+    updatedAt: now,
+  };
+}
+
+export function updateRankingItem(
+  ranking: Ranking,
+  itemId: string,
+  input: UpdateRankingItemInput
+): Ranking {
+  validateScore(ranking.scoringMode, input.score);
+
+  const itemExists = ranking.items.some(
+    (item) => item.id === itemId
+  );
+
+  if (!itemExists) {
+    throw new Error(`Ranking item ${itemId} was not found.`);
+  }
+
+  const now = new Date().toISOString();
+
+  return {
+    ...ranking,
+
+    items: ranking.items.map((item) =>
+      item.id === itemId
+        ? {
+            ...item,
+            name: input.name.trim(),
+            description: input.description?.trim() || null,
+            score: input.score,
+            updatedAt: now,
+          }
+        : item
+    ),
+
     updatedAt: now,
   };
 }

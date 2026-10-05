@@ -5,6 +5,7 @@ import {
   removeRankingItem,
   reorderRankingItem,
   setRankingItemScore,
+  updateRankingItem
 } from "../domain/ranking.rules";
 
 import {
@@ -12,9 +13,12 @@ import {
   CreateRankingInput,
   Ranking,
   RankingScoringMode,
+  UpdateRankingItemInput
 } from "../domain/ranking.types";
 
-import { rankingRepository } from "../repositories/in-memory-ranking.repository";
+import {
+  supabaseRankingRepository as rankingRepository,
+} from "../repositories/supabase-ranking.repository";
 
 async function requireRanking(id: string): Promise<Ranking> {
   const ranking = await rankingRepository.getById(id);
@@ -69,6 +73,22 @@ export const rankingService = {
 
     return rankingRepository.save(updated);
   },
+
+  async updateItem(
+  rankingId: string,
+  itemId: string,
+  input: UpdateRankingItemInput
+) {
+  const ranking = await requireRanking(rankingId);
+
+  const updated = updateRankingItem(
+    ranking,
+    itemId,
+    input
+  );
+
+  return rankingRepository.save(updated);
+},
 
   async setScore(
     rankingId: string,

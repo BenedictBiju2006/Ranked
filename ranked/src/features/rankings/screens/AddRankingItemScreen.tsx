@@ -1,9 +1,6 @@
 import { router } from "expo-router";
-import {
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+
+import { ScreenState } from "../components/ui/ScreenState";
 
 import {
   RankingItemForm,
@@ -23,6 +20,7 @@ export function AddRankingItemScreen({
     data: ranking,
     isPending,
     isError,
+    refetch,
   } = useRanking(rankingId);
 
   const addRankingItem =
@@ -30,17 +28,32 @@ export function AddRankingItemScreen({
 
   if (isPending) {
     return (
-      <View style={styles.stateContainer}>
-        <Text>Loading ranking...</Text>
-      </View>
+      <ScreenState
+        loading
+        title="Loading ranking"
+      />
     );
   }
 
-  if (isError || !ranking) {
+  if (isError) {
     return (
-      <View style={styles.stateContainer}>
-        <Text>Ranking not found.</Text>
-      </View>
+      <ScreenState
+        title="Couldn't load ranking"
+        message="Check your connection and try again."
+        actionLabel="Try Again"
+        onAction={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  if (!ranking) {
+    return (
+      <ScreenState
+        title="Ranking not found"
+        message="It may have been deleted."
+      />
     );
   }
 
@@ -56,7 +69,9 @@ export function AddRankingItemScreen({
 
   return (
     <RankingItemForm
-      scoringMode={ranking.scoringMode}
+      scoringMode={
+        ranking.scoringMode
+      }
       submitLabel="Add Item"
       isPending={
         addRankingItem.isPending
@@ -65,10 +80,3 @@ export function AddRankingItemScreen({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  stateContainer: {
-    flex: 1,
-    padding: 24,
-  },
-});

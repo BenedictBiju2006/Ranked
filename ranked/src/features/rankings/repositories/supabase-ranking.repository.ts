@@ -1,4 +1,9 @@
+import {
+  QueryData,
+} from "@supabase/supabase-js";
+
 import { supabase } from "@/lib/supabase";
+import { Database } from "@/types/database.types";
 
 import {
   Ranking,
@@ -6,30 +11,6 @@ import {
   RankingScoringMode,
 } from "../domain/ranking.types";
 import { RankingRepository } from "./ranking.repository";
-
-type RankingItemRow = {
-  id: string;
-  ranking_id: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-  score: number | null;
-  position: number;
-  created_at: string;
-  updated_at: string;
-};
-
-type RankingRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  scoring_mode: RankingScoringMode;
-  category: string | null;
-  context: string | null;
-  created_at: string;
-  updated_at: string;
-  ranking_items: RankingItemRow[] | null;
-};
 
 const rankingSelect = `
   id,
@@ -53,6 +34,44 @@ const rankingSelect = `
   )
 `;
 
+const rankingQuery =
+  supabase
+    .from("rankings")
+    .select(rankingSelect);
+
+type RankingQueryData =
+  QueryData<typeof rankingQuery>;
+
+type RankingRow =
+  RankingQueryData[number];
+
+type RankingItemRow =
+  NonNullable<
+    RankingRow["ranking_items"]
+  >[number];
+
+type RankingInsert =
+  Database["public"]["Tables"]["rankings"]["Insert"];
+
+type RankingItemInsert =
+  Database["public"]["Tables"]["ranking_items"]["Insert"];
+
+function mapScoringMode(
+  value: string
+): RankingScoringMode {
+  if (
+    value === "binary" ||
+    value === "stars_5" ||
+    value === "score_10"
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    `Unknown scoring mode: ${value}`
+  );
+}
+
 function mapRankingItem(
   row: RankingItemRow
 ): RankingItem {
@@ -72,18 +91,21 @@ function mapRankingItem(
 function mapRanking(
   row: RankingRow
 ): Ranking {
-  const items = (row.ranking_items ?? [])
-    .map(mapRankingItem)
-    .sort(
-      (a, b) =>
-        a.position - b.position
-    );
+  const items =
+    (row.ranking_items ?? [])
+      .map(mapRankingItem)
+      .sort(
+        (a, b) =>
+          a.position - b.position
+      );
 
   return {
     id: row.id,
     title: row.title,
     description: row.description,
-    scoringMode: row.scoring_mode,
+    scoringMode: mapScoringMode(
+      row.scoring_mode
+    ),
     category: row.category,
     context: row.context,
     items,
@@ -94,7 +116,7 @@ function mapRanking(
 
 function toRankingRow(
   ranking: Ranking
-) {
+): RankingInsert {
   return {
     id: ranking.id,
     title: ranking.title,
@@ -109,7 +131,7 @@ function toRankingRow(
 
 function toRankingItemRow(
   item: RankingItem
-) {
+): RankingItemInsert {
   return {
     id: item.id,
     ranking_id: item.rankingId,
@@ -139,9 +161,7 @@ class SupabaseRankingRepository
       throw error;
     }
 
-    return (data as RankingRow[]).map(
-      mapRanking
-    );
+    return data.map(mapRanking);
   }
 
   async getById(
@@ -162,9 +182,7 @@ class SupabaseRankingRepository
       return null;
     }
 
-    return mapRanking(
-      data as RankingRow
-    );
+    return mapRanking(data);
   }
 
   async save(
@@ -200,13 +218,16 @@ class SupabaseRankingRepository
     }
 
     if (ranking.items.length > 0) {
+      const itemRows =
+        ranking.items.map(
+          toRankingItemRow
+        );
+
       const { error: itemsError } =
         await supabase
           .from("ranking_items")
           .upsert(
-            ranking.items.map(
-              toRankingItemRow
-            ),
+            itemRows,
             {
               onConflict: "id",
             }
@@ -228,13 +249,17 @@ class SupabaseRankingRepository
       (existingItems ?? [])
         .filter(
           (item) =>
-            !currentItemIds.has(item.id)
+            !currentItemIds.has(
+              item.id
+            )
         )
         .map(
           (item) => item.id
         );
 
-    if (removedItemIds.length > 0) {
+    if (
+      removedItemIds.length > 0
+    ) {
       const { error: deleteError } =
         await supabase
           .from("ranking_items")

@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 
+import { ScreenState } from "../components/ui/ScreenState";
+
 import { useRanking } from "../hooks/useRankings";
 import { useUpdateRanking } from "../hooks/useUpdateRanking";
 
@@ -30,21 +32,37 @@ export function EditRankingScreen({
     data: ranking,
     isPending,
     isError,
+    refetch,
   } = useRanking(rankingId);
 
   if (isPending) {
     return (
-      <View style={styles.container}>
-        <Text>Loading ranking...</Text>
-      </View>
+      <ScreenState
+        loading
+        title="Loading ranking"
+      />
     );
   }
 
-  if (isError || !ranking) {
+  if (isError) {
     return (
-      <View style={styles.container}>
-        <Text>Ranking not found.</Text>
-      </View>
+      <ScreenState
+        title="Couldn't load ranking"
+        message="Check your connection and try again."
+        actionLabel="Try Again"
+        onAction={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  if (!ranking) {
+    return (
+      <ScreenState
+        title="Ranking not found"
+        message="It may have been deleted."
+      />
     );
   }
 
@@ -91,10 +109,14 @@ function EditRankingForm({
     }));
   }
 
-  async function handleSave() {
-    const nextErrors: ValidationErrors = {};
+  function validateForm():
+    ValidationErrors {
+    const nextErrors:
+      ValidationErrors = {};
 
-    const cleanTitle = title.trim();
+    const cleanTitle =
+      title.trim();
+
     const cleanDescription =
       description.trim();
 
@@ -115,10 +137,22 @@ function EditRankingForm({
         "Keep the description under 500 characters.";
     }
 
+    return nextErrors;
+  }
+
+  async function handleSave() {
+    const validationErrors =
+      validateForm();
+
     if (
-      Object.keys(nextErrors).length > 0
+      Object.keys(
+        validationErrors
+      ).length > 0
     ) {
-      setErrors(nextErrors);
+      setErrors(
+        validationErrors
+      );
+
       return;
     }
 
@@ -126,9 +160,10 @@ function EditRankingForm({
 
     try {
       await updateRanking.mutateAsync({
-        title: cleanTitle,
+        title: title.trim(),
         description:
-          cleanDescription || undefined,
+          description.trim() ||
+          undefined,
       });
 
       router.back();
@@ -147,7 +182,7 @@ function EditRankingForm({
     >
       <View style={styles.container}>
         <View style={styles.field}>
-          <Text style={styles.label}>
+          <Text style={styles.fieldLabel}>
             Title
           </Text>
 
@@ -157,6 +192,8 @@ function EditRankingForm({
               setTitle(value);
               clearError("title");
             }}
+            placeholder="Ranking title"
+            autoFocus
             style={[
               styles.input,
               errors.title &&
@@ -172,15 +209,21 @@ function EditRankingForm({
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>
+          <Text style={styles.fieldLabel}>
             Description
+          </Text>
+
+          <Text style={styles.fieldDescription}>
+            Add context about what this ranking represents.
           </Text>
 
           <TextInput
             value={description}
             onChangeText={(value) => {
               setDescription(value);
-              clearError("description");
+              clearError(
+                "description"
+              );
             }}
             multiline
             placeholder="What is this ranking about?"
@@ -200,8 +243,14 @@ function EditRankingForm({
         </View>
 
         {errors.submit && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorBoxText}>
+          <View
+            style={styles.submitError}
+          >
+            <Text
+              style={
+                styles.submitErrorText
+              }
+            >
               {errors.submit}
             </Text>
           </View>
@@ -240,9 +289,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  label: {
+  fieldLabel: {
     fontSize: 16,
     fontWeight: "600",
+  },
+
+  fieldDescription: {
+    fontSize: 14,
+    opacity: 0.55,
   },
 
   input: {
@@ -266,14 +320,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  errorBox: {
+  submitError: {
     padding: 14,
     borderRadius: 10,
     backgroundColor: "#FEE4E2",
   },
 
-  errorBoxText: {
+  submitErrorText: {
     color: "#B42318",
+    fontSize: 14,
   },
 
   button: {
@@ -288,7 +343,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: "white",
-    fontWeight: "600",
     textAlign: "center",
+    fontWeight: "600",
   },
 });

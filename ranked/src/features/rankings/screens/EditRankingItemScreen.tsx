@@ -1,9 +1,6 @@
 import { router } from "expo-router";
-import {
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+
+import { ScreenState } from "../components/ui/ScreenState";
 
 import {
   RankingItemForm,
@@ -25,6 +22,7 @@ export function EditRankingItemScreen({
     data: ranking,
     isPending,
     isError,
+    refetch,
   } = useRanking(rankingId);
 
   const updateRankingItem =
@@ -35,29 +33,46 @@ export function EditRankingItemScreen({
 
   if (isPending) {
     return (
-      <View style={styles.stateContainer}>
-        <Text>Loading item...</Text>
-      </View>
+      <ScreenState
+        loading
+        title="Loading item"
+      />
     );
   }
 
-  if (isError || !ranking) {
+  if (isError) {
     return (
-      <View style={styles.stateContainer}>
-        <Text>Ranking not found.</Text>
-      </View>
+      <ScreenState
+        title="Couldn't load item"
+        message="Check your connection and try again."
+        actionLabel="Try Again"
+        onAction={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  if (!ranking) {
+    return (
+      <ScreenState
+        title="Ranking not found"
+        message="It may have been deleted."
+      />
     );
   }
 
   const item = ranking.items.find(
-    (item) => item.id === itemId
+    (item) =>
+      item.id === itemId
   );
 
   if (!item) {
     return (
-      <View style={styles.stateContainer}>
-        <Text>Item not found.</Text>
-      </View>
+      <ScreenState
+        title="Item not found"
+        message="It may have been deleted."
+      />
     );
   }
 
@@ -73,7 +88,9 @@ export function EditRankingItemScreen({
 
   return (
     <RankingItemForm
-      scoringMode={ranking.scoringMode}
+      scoringMode={
+        ranking.scoringMode
+      }
       initialName={item.name}
       initialDescription={
         item.description ?? ""
@@ -87,10 +104,3 @@ export function EditRankingItemScreen({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  stateContainer: {
-    flex: 1,
-    padding: 24,
-  },
-});

@@ -4,7 +4,8 @@ import {
   Ranking,
   RankingItem,
   RankingScoringMode,
-  UpdateRankingItemInput
+  UpdateRankingItemInput,
+  UpdateRankingInput
 } from "./ranking.types";
 
 function generateId(): string {
@@ -248,4 +249,22 @@ export function getOrderedRankingItems(ranking: Ranking): RankingItem[] {
 
     return a.position - b.position;
   });
+}
+
+export function updateRanking(
+  ranking: Ranking,
+  input: UpdateRankingInput
+): Ranking {
+  const title = input.title.trim();
+
+  if (!title) {
+    throw new Error("Ranking title cannot be empty.");
+  }
+
+  return {
+    ...ranking,
+    title,
+    description: input.description?.trim() || null,
+    updatedAt: new Date().toISOString(),
+  };
 }

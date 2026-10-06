@@ -52,3 +52,8 @@ export interface UpdateRankingItemInput {
   description?: string;
   score: number;
 }
+
+export interface UpdateRankingInput {
+  title: string;
+  description?: string;
+}

@@ -82,14 +82,32 @@ export function RankingDetailScreen({
           </Text>
         </View>
 
-        <Pressable
-          style={styles.addButton}
-          onPress={handleAddItem}
-        >
-          <Text style={styles.addButtonText}>
-            +
-          </Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.editButton}
+            onPress={() =>
+              router.push({
+                pathname: "/ranking/edit",
+                params: {
+                  rankingId,
+                },
+              })
+            }
+          >
+            <Text style={styles.editButtonText}>
+              Edit
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.addButton}
+            onPress={handleAddItem}
+          >
+            <Text style={styles.addButtonText}>
+              +
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <FlatList
@@ -362,6 +380,24 @@ deleteAction: {
 deleteActionText: {
   color: "white",
   fontSize: 15,
+  fontWeight: "600",
+},
+
+headerActions: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 10,
+},
+
+editButton: {
+  paddingHorizontal: 14,
+  height: 44,
+  justifyContent: "center",
+  borderWidth: 1,
+  borderRadius: 22,
+},
+
+editButtonText: {
   fontWeight: "600",
 },
 });

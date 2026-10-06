@@ -5,12 +5,41 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert
 } from "react-native";
 
 import { useRankings } from "../hooks/useRankings";
+import { useDeleteRanking } from "../hooks/useDeleteRanking";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 export function RankingsScreen() {
   const { data: rankings = [] } = useRankings();
+
+  const deleteRanking = useDeleteRanking();
+
+  function handleDelete(
+    rankingId: string,
+    title: string
+  ) {
+    Alert.alert(
+      "Delete ranking?",
+      `"${title}" and all of its items will be deleted.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () =>
+            deleteRanking.mutate(
+              rankingId
+            ),
+        },
+      ]
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -40,23 +69,42 @@ export function RankingsScreen() {
           </Text>
         }
         renderItem={({ item }) => (
-          <Pressable
-            style={styles.card}
-            onPress={() =>
-              router.push({
-                pathname: "/ranking/[id]",
-                params: { id: item.id },
-              })
-            }
+          <View style={styles.swipeClip}>
+            <Swipeable
+          overshootRight={false}
+          renderRightActions={() => (
+            <Pressable
+              style={styles.deleteAction}
+              onPress={() => 
+                handleDelete(item.id, item.title)
+              }            
+            >
+              <Text style={styles.deleteActionText}>
+                Delete
+              </Text>
+            </Pressable>
+          )}
           >
-            <Text style={styles.cardTitle}>
-              {item.title}
-            </Text>
+            <Pressable
+              style={styles.card}
+              onPress={() =>
+                router.push({
+                  pathname: "/ranking/[id]",
+                  params: { id: item.id },
+                })
+              }
+            >
+              <Text style={styles.cardTitle}>
+                {item.title}
+              </Text>
 
-            <Text style={styles.cardMeta}>
-              {item.items.length} items
-            </Text>
-          </Pressable>
+              <Text style={styles.cardMeta}>
+                {item.items.length} items
+              </Text>
+            </Pressable>
+          </Swipeable>
+          </View>
+          
         )}
       />
     </View>
@@ -105,8 +153,29 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+   deleteActionText: {
+    fontSize: 20,
+    fontWeight: "600",
+  },
+
   cardMeta: {
     marginTop: 6,
     opacity: 0.5,
   },
+
+  swipeClip: {
+  borderRadius: 14,
+  overflow: "hidden",
+},
+
+swipeable: {
+  backgroundColor: "#D92D20",
+},
+
+deleteAction: {
+  width: 100,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#D92D20",
+},
 });

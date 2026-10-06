@@ -65,6 +65,14 @@ function RootNavigator() {
         />
 
         <Stack.Screen
+          name="ranking/edit"
+          options={{
+            title: "Edit Ranking",
+            presentation: "modal",
+          }}
+        />
+
+        <Stack.Screen
           name="ranking/add-item"
           options={{
             title: "Add Item",

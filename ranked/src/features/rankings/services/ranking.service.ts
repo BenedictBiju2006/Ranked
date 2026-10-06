@@ -5,7 +5,8 @@ import {
   removeRankingItem,
   reorderRankingItem,
   setRankingItemScore,
-  updateRankingItem
+  updateRankingItem,
+  updateRanking
 } from "../domain/ranking.rules";
 
 import {
@@ -13,7 +14,8 @@ import {
   CreateRankingInput,
   Ranking,
   RankingScoringMode,
-  UpdateRankingItemInput
+  UpdateRankingItemInput,
+  UpdateRankingInput
 } from "../domain/ranking.types";
 
 import {
@@ -44,6 +46,20 @@ export const rankingService = {
 
     return rankingRepository.save(ranking);
   },
+
+  async update(
+  rankingId: string,
+  input: UpdateRankingInput
+) {
+  const ranking = await requireRanking(rankingId);
+
+  const updated = updateRanking(
+    ranking,
+    input
+  );
+
+  return rankingRepository.save(updated);
+},
 
   async delete(id: string) {
     return rankingRepository.delete(id);
